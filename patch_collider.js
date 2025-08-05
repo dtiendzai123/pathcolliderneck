@@ -5,21 +5,10 @@
 // @run-at       response
 // ==/UserScript==
 
-// === Debug nội dung phản hồi để tránh lỗi parse ===
-let body;
-try {
-  console.log("📦 Response body (debug):", $response.body);
-  body = JSON.parse($response.body);
-} catch (e) {
-  console.log("❌ Không thể parse JSON:", e.message);
-  $done(); // Dừng script nếu JSON lỗi
-  return;
-}
-
 // === Định danh cố định của hitdetectcolliderhelper (đã lấy từ file Unity dump)
 const HITDETECT_SCRIPT_PATHID = 5413178814189125325;
 
-// === Patch function
+// === Patch function đệ quy để sửa các object collider/bone
 function deepPatch(obj) {
   if (typeof obj !== 'object' || obj === null) return;
 
@@ -32,7 +21,7 @@ function deepPatch(obj) {
       val?.m_Script?.m_PathID === HITDETECT_SCRIPT_PATHID &&
       val?.ColliderType !== undefined
     ) {
-      val.ColliderType = 3;
+      val.ColliderType = 3; // High head collider
       val.m_Enabled = 1;
       val.AlwaysEnable = true;
       val.IsCritical = true;
@@ -52,13 +41,21 @@ function deepPatch(obj) {
       if (val?.ColliderType !== undefined) val.ColliderType = 3;
     }
 
+    // --- Đệ quy tiếp tục nếu là object ---
     if (typeof val === 'object') {
       deepPatch(val);
     }
   }
 }
 
-// === Chạy patch nếu parse thành công ===
-deepPatch(body);
-
-$done({ body: JSON.stringify(body) });
+// === Gỡ lỗi và parse JSON từ response ===
+let body;
+try {
+  console.log("📦 Response body (debug):", $response.body);
+  body = JSON.parse($response.body);
+  deepPatch(body);
+  $done({ body: JSON.stringify(body) });
+} catch (e) {
+  console.log("❌ Không thể parse JSON:", e.message);
+  $done(); // kết thúc nếu lỗi JSON
+}
