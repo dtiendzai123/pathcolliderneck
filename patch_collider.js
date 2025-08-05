@@ -1,11 +1,10 @@
 // ==UserScript==
-// @name         Patch Collider & SABone Enhancer
+// @name         Patch Collider & SABone Enhancer (Safe)
 // @namespace    http://garena.freefire/
 // @match        *api.ff.garena.com*
 // @run-at       response
 // ==/UserScript==
 
-// === Định danh cố định của hitdetectcolliderhelper (đã lấy từ file Unity dump)
 const HITDETECT_SCRIPT_PATHID = 5413178814189125325;
 
 // === Patch function đệ quy để sửa các object collider/bone
@@ -21,7 +20,7 @@ function deepPatch(obj) {
       val?.m_Script?.m_PathID === HITDETECT_SCRIPT_PATHID &&
       val?.ColliderType !== undefined
     ) {
-      val.ColliderType = 3; // High head collider
+      val.ColliderType = 3;
       val.m_Enabled = 1;
       val.AlwaysEnable = true;
       val.IsCritical = true;
@@ -41,21 +40,22 @@ function deepPatch(obj) {
       if (val?.ColliderType !== undefined) val.ColliderType = 3;
     }
 
-    // --- Đệ quy tiếp tục nếu là object ---
     if (typeof val === 'object') {
       deepPatch(val);
     }
   }
 }
 
-// === Gỡ lỗi và parse JSON từ response ===
-let body;
+// === Parse JSON từ response một cách an toàn ===
 try {
-  console.log("📦 Response body (debug):", $response.body);
-  body = JSON.parse($response.body);
+  if (!$response || !$response.body) throw new Error("Không có response.body");
+
+  const body = JSON.parse($response.body);
   deepPatch(body);
+
   $done({ body: JSON.stringify(body) });
+
 } catch (e) {
-  console.log("❌ Không thể parse JSON:", e.message);
-  $done(); // kết thúc nếu lỗi JSON
+  console.log("❌ PATCH ERROR:", e.message);
+  $done({});
 }
