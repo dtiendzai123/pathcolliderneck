@@ -27,6 +27,12 @@ function deepPatch(obj) {
       val.ForceHeadshot = true;
     val.LockOnTarget = true;
    val.HitboxExpand = 1.5;
+    val.LockCrosshair = true;
+  val.TrackAim = true;
+  val.TargetBone = "Head"; // hoặc "Neck", tuỳ xương
+  val.IsAimTarget = true;
+  val.AimAssistPriority = 9999;
+    val.IgnoreCulling = true;
     }
 
     // --- Patch SABoneCollider hoặc liên quan bone tracking ---
@@ -41,7 +47,13 @@ function deepPatch(obj) {
       val.Priority = 9999;
      val.LockOnTarget = true;
        val.HitboxExpand = 1.5;
-         if (val?.ColliderType !== undefined) val.ColliderType = 3;
+          val.LockCrosshair = true;
+  val.TrackAim = true;
+  val.TargetBone = "Head"; // hoặc "Neck", tuỳ xương
+  val.IsAimTarget = true;
+  val.AimAssistPriority = 9999;
+       val.IgnoreCulling = true;
+      if (val?.ColliderType !== undefined) val.ColliderType = 3;
     }
 
     if (typeof val === 'object') {
